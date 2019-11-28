@@ -1,11 +1,9 @@
-/**
-
 #include "Valve\Valve.h"
 
 //Определения для адресов регистров с данными
-#define MB_CONTROL_WORD  MB_HOLDING_REGISTERS[firstRegister]     //Слово управления
-#define MB_STRT_TIME     MB_HOLDING_REGISTERS[firstRegister + 1] //Время процесса начала
-#define MB_STP_TIME      MB_HOLDING_REGISTERS[firstRegister + 2] //Время окончания процесса
+#define MB_CONTROL_WORD  *(MB_HOLDING_REGISTERS + firstRegister * 2)     //Слово управления
+#define MB_STRT_TIME     *(MB_HOLDING_REGISTERS + firstRegister * 2 + 2) //Время процесса начала
+#define MB_STP_TIME      *(MB_HOLDING_REGISTERS + firstRegister * 2 + 4) //Время окончания процесса
 
 //Конструктор класса Valve
 Valve::Valve()
@@ -14,13 +12,13 @@ Valve::Valve()
 }
 
 //Конструктор класса Valve
-Valve::Valve(int _pin, int _firstRegister, uint16_t _MB_HOLDING_REGISTERS[])
+Valve::Valve(int _pin, int _firstRegister, uint16_t *PNT_MB_HOLDING_REGISTERS)
 {             
         pin = _pin;
         firstRegister = _firstRegister;
 
-        //Передаем указатель на массив
-        this->MB_HOLDING_REGISTERS = _MB_HOLDING_REGISTERS;
+        //Передаем указатель на первый элемент массива HOLDING регистров модбас
+        MB_HOLDING_REGISTERS = PNT_MB_HOLDING_REGISTERS;
         
         //Чтение настроек из EEPROM при запуске
         MB_STRT_TIME = StartTime = word(EEPROM.read(_firstRegister), EEPROM.read(_firstRegister + 1));
@@ -33,11 +31,10 @@ Valve::Valve(int _pin, int _firstRegister, uint16_t _MB_HOLDING_REGISTERS[])
 }
 
 
-
-    //Обновление данных. Метод вызывается в loop
-    //Управляет логикой
-    void Valve::Update()
-    { 
+//Обновление данных. Метод вызывается в loop
+//Управляет логикой
+void Valve::Update()
+{ 
       //Переменная для временного хранения результата состояния пина,
       //к которому полключается клапан
       bool tempStateValve = false;
@@ -91,18 +88,18 @@ Valve::Valve(int _pin, int _firstRegister, uint16_t _MB_HOLDING_REGISTERS[])
       //Записываем сотояние реле в регистр,
       //для того чтоб было видно его состояние
       bitWrite(MB_HOLDING_REGISTERS[firstRegister], 4, tempStateValve);
-    }
+}
     
 
     
-    //Получаем регистр, СЛОВО УПРАВЛЕНИЯ и другие
-    void Valve::UpdateRegister()
-    {     
+//Получаем регистр, СЛОВО УПРАВЛЕНИЯ и другие
+void Valve::UpdateRegister()
+{     
         //Проверяем, если регистр (слово управления) изменился,
         //тогда пытаемся его парсим
-        if( *MB_CONTROL_WORD != CONTROL_WORD) 
+        if( MB_CONTROL_WORD != CONTROL_WORD) 
         {
-          CONTROL_WORD = *MB_CONTROL_WORD;
+          CONTROL_WORD = MB_CONTROL_WORD;
           Force = GetBit(CONTROL_WORD, 0);        
           AUTO_MODE = GetBit(CONTROL_WORD, 1);
 
@@ -126,28 +123,15 @@ Valve::Valve(int _pin, int _firstRegister, uint16_t _MB_HOLDING_REGISTERS[])
           EEPROM.write(firstRegister + 0, highByte(StartTime));      
           EEPROM.write(firstRegister + 1, lowByte (StartTime)); 
           EEPROM.commit();
-
-          Serial.print("Start time reccord: ");
-          Serial.print("cell: ");
-          Serial.print(firstRegister);
-          Serial.print(" value: ");
-          Serial.println(StartTime);
         }
 
         //Проверяем, если регистр (время выключения) изменился, 
         //тогда его сохраняем в EEPROM
-        if(*MB_STP_TIME != EndTime) 
+        if(MB_STP_TIME != EndTime) 
         {
-          EndTime = *MB_STP_TIME;
+          EndTime = MB_STP_TIME;
           EEPROM.write(firstRegister + 2, highByte(EndTime));      
           EEPROM.write(firstRegister + 3, lowByte(EndTime));  
           EEPROM.commit(); 
-
-          Serial.print("Stop time reccord: ");
-          Serial.print("cell: ");
-          Serial.print(firstRegister + 2);
-          Serial.print(" value: ");
-          Serial.println(EndTime);
         }
-    }
-    **/
+}

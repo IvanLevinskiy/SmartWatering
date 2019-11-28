@@ -30,7 +30,7 @@ class Valve
 
     //Конструктор класса
     //_pin - пин, к которому подключен клапан
-    Valve(int _pin, int _firstRegister, uint16_t MB_HOLDING_REGISTERS[]);
+    Valve(int _pin, int _firstRegister, uint16_t PNT_MB_HOLDING_REGISTERS []);
 
     //Обновление данных. Метод вызывается в loop
     //Управляет логикой
@@ -53,7 +53,7 @@ class Valve
           int firstRegister;
 
           //Указатель на элемент массива с регистрами
-          uint16_t* MB_HOLDING_REGISTERS [];
+          uint16_t *MB_HOLDING_REGISTERS;
 
           //Получаем бит из слова
           bool GetBit(uint16_t _value, int _bit);
