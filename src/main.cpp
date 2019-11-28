@@ -2,7 +2,7 @@
 #include <ESP8266WiFi.h>
 #include "EEPROM.h"
 #include <Ticker.h>
-//#include <Valve/Valve.h>
+#include <Valve/Valve.h>
 
 //Максимальное количество HOLDING регистров
 #define MAX_HOLDING_REGISTERS 37
@@ -93,7 +93,7 @@ WiFiClient client;
 #define MB_STP_TIME      MB_HOLDING_REGISTERS[firstRegister + 2] //Время окончания процесса
 
 //Класс клапана
-
+/**
 class Valve
 {
   public:
@@ -281,7 +281,7 @@ class Valve
               return true;
           }
 };
-
+**/
 
 //Инициализация клапанов
 Valve  Valve_1;
@@ -665,10 +665,10 @@ void setup()
   //Инициализация EEPROM
   EEPROM.begin(512);
 
-  Valve_1 = Valve("", 13, 14);
-  Valve_2 = Valve("", 12, 20);
-  Valve_3 = Valve("", 14, 26);
-  Valve_4 = Valve("", 4,  32);
+  Valve_1 = Valve(13, 14, MB_HOLDING_REGISTERS);
+  Valve_2 = Valve(12, 20, MB_HOLDING_REGISTERS);
+  Valve_3 = Valve(14, 26, MB_HOLDING_REGISTERS);
+  Valve_4 = Valve(4,  32, MB_HOLDING_REGISTERS);
 
 
   //Создаем сеть

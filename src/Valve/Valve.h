@@ -1,9 +1,14 @@
-
 #include <ESP8266WiFi.h>
 #include "EEPROM.h"
 
-#define CURRUNT_TIME  MB_HOLDING_REGISTERS[5] //Текущее время в минутах
-#define SECONDS       MB_HOLDING_REGISTERS[6] //Количество секунд
+//Определения для регистров времени
+#define CURRUNT_TIME  *(MB_HOLDING_REGISTERS + 5) //Текущее время в минутах (пятый регистр)
+#define SECONDS       *(MB_HOLDING_REGISTERS + 6) //Количество секунд (шестой регистр)
+
+//Определения для адресов регистров с данными
+#define MB_CONTROL_WORD  *(MB_HOLDING_REGISTERS + firstRegister)     //Слово управления
+#define MB_STRT_TIME     *(MB_HOLDING_REGISTERS + firstRegister + 1) //Время процесса начала
+#define MB_STP_TIME      *(MB_HOLDING_REGISTERS + firstRegister + 2)  //Время окончания процесса
 
 //Класс клапана
 class Valve
@@ -30,7 +35,7 @@ class Valve
 
     //Конструктор класса
     //_pin - пин, к которому подключен клапан
-    Valve(int _pin, int _firstRegister, uint16_t PNT_MB_HOLDING_REGISTERS []);
+    Valve(int _pin, int _firstRegister, uint16_t *PNT_MB_HOLDING_REGISTERS);
 
     //Обновление данных. Метод вызывается в loop
     //Управляет логикой

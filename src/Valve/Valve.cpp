@@ -1,9 +1,6 @@
 #include "Valve\Valve.h"
 
-//Определения для адресов регистров с данными
-#define MB_CONTROL_WORD  *(MB_HOLDING_REGISTERS + firstRegister * 2)     //Слово управления
-#define MB_STRT_TIME     *(MB_HOLDING_REGISTERS + firstRegister * 2 + 2) //Время процесса начала
-#define MB_STP_TIME      *(MB_HOLDING_REGISTERS + firstRegister * 2 + 4) //Время окончания процесса
+
 
 //Конструктор класса Valve
 Valve::Valve()
@@ -19,7 +16,7 @@ Valve::Valve(int _pin, int _firstRegister, uint16_t *PNT_MB_HOLDING_REGISTERS)
 
         //Передаем указатель на первый элемент массива HOLDING регистров модбас
         MB_HOLDING_REGISTERS = PNT_MB_HOLDING_REGISTERS;
-        
+                
         //Чтение настроек из EEPROM при запуске
         MB_STRT_TIME = StartTime = word(EEPROM.read(_firstRegister), EEPROM.read(_firstRegister + 1));
         MB_STP_TIME = EndTime =    word(EEPROM.read(_firstRegister + 2), EEPROM.read(_firstRegister + 3));
@@ -29,7 +26,6 @@ Valve::Valve(int _pin, int _firstRegister, uint16_t *PNT_MB_HOLDING_REGISTERS)
         pinMode(pin, OUTPUT);
         digitalWrite(pin, HIGH);
 }
-
 
 //Обновление данных. Метод вызывается в loop
 //Управляет логикой
@@ -90,8 +86,6 @@ void Valve::Update()
       bitWrite(MB_HOLDING_REGISTERS[firstRegister], 4, tempStateValve);
 }
     
-
-    
 //Получаем регистр, СЛОВО УПРАВЛЕНИЯ и другие
 void Valve::UpdateRegister()
 {     
@@ -107,12 +101,6 @@ void Valve::UpdateRegister()
           EEPROM.write(firstRegister + 4, highByte(CONTROL_WORD));      
           EEPROM.write(firstRegister + 5, lowByte (CONTROL_WORD)); 
           EEPROM.commit();  
-
-          Serial.print("CW Reccord: ");
-          Serial.print("cell: ");
-          Serial.print(firstRegister + 4);
-          Serial.print(" value: ");
-          Serial.println(CONTROL_WORD);
         }
 
         //Проверяем, если регистр (время включения) изменился, 
@@ -134,4 +122,15 @@ void Valve::UpdateRegister()
           EEPROM.write(firstRegister + 3, lowByte(EndTime));  
           EEPROM.commit(); 
         }
+}
+
+//Получаем бит из слова
+bool Valve::GetBit(uint16_t _value, int _bit)
+{
+  uint16_t res = _value;
+  res &= (uint16_t)(1<<_bit);
+
+  //возвращаем результат
+  if(res == 0) return false;
+  return true;
 }
