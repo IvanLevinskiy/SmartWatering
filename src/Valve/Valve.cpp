@@ -1,11 +1,8 @@
 #include "Valve\Valve.h"
 
-
-
 //Конструктор класса Valve
 Valve::Valve()
 {             
-
 }
 
 //Конструктор класса Valve
@@ -79,7 +76,7 @@ void Valve::Update()
 
       //Передаем состояние пина реле с инверсией,
       //так как логика у реле обратная
-      M1: digitalWrite(pin, ! tempStateValve);
+      M1: digitalWrite(pin, tempStateValve);
       
       //Записываем сотояние реле в регистр,
       //для того чтоб было видно его состояние
