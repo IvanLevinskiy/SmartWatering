@@ -25,32 +25,13 @@ void MODBUS_TCP_SLAVE::WIFI_AP_INIT()
 {   
     WiFi.mode(WIFI_AP);
     //WiFi.softAPConfig(ip, gateway, subnet);
-    WiFi.softAP("Watering", "");
+    WiFi.softAP("Watering");
     
-    if ( ! (_checkMacAddres(MAC))) 
-    {
-        WiFi.softAPmacAddress(MAC);
-    }
+    //if ( ! (_checkMacAddres(MAC))) 
+    //{
+    //    WiFi.softAPmacAddress(MAC);
+    //}
     
-    delay(3000);
-    MBServer.begin();
-}
-
-void MODBUS_TCP_SLAVE::AP_CONNECT()
-{
-    if ( _checkMacAddres(MAC)) 
-    {
-        //wifi_set_macaddr(1, const_cast<uint8*>(MAC));
-    }
-
-    WiFi.softAPConfig(ip, gateway, subnet);
-    WiFi.softAP("Watering", "");
-    
-    if ( ! (_checkMacAddres(MAC))) 
-    {
-        WiFi.softAPmacAddress(MAC);
-    }
-
     delay(3000);
     MBServer.begin();
 }
@@ -315,7 +296,13 @@ void MODBUS_TCP_SLAVE::MODBUS_UPDATE()
 
 #pragma region  ПУБЛИЧНЫЕ МЕТОДЫ
 
+MODBUS_TCP_SLAVE::MODBUS_TCP_SLAVE()
+{
+
+}
+
 #pragma endregion
+
 
 
 

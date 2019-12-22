@@ -1,4 +1,8 @@
+#ifndef VALVE_H
+#define VALVE_H
+
 #include <ESP8266WiFi.h>
+//#include <WiFi.h>
 #include "EEPROM.h"
 
 //Определения для регистров времени
@@ -63,3 +67,5 @@ class Valve
           //Получаем бит из слова
           bool GetBit(uint16_t _value, int _bit);
 };
+
+#endif

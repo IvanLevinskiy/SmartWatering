@@ -1,4 +1,8 @@
+#ifndef MODBUS_TCP_H
+#define MODBUS_TCP_H
+
 #include <ESP8266WiFi.h>
+//#include <WiFi.h>
 
 //Максимальное количество HOLDING регистров
 #define MAX_HOLDING_REGISTERS 37
@@ -8,9 +12,9 @@
 
 //Определение функций модбас
 #define MB_FC_NONE 0
-#define MB_FC_READ_REGISTERS 3 //implemented
-#define MB_FC_WRITE_REGISTER 6 //implemented
-#define MB_FC_WRITE_MULTIPLE_REGISTERS 16 //implemented
+#define MB_FC_READ_REGISTERS 3 //Чтение HOLDING регистра
+#define MB_FC_WRITE_REGISTER 6 //Запись одного HOLDING регистра
+#define MB_FC_WRITE_MULTIPLE_REGISTERS 16 //Запись нескольких HOLDING регистров
 //
 // MODBUS Error Codes
 //
@@ -44,9 +48,6 @@ class MODBUS_TCP_SLAVE
     //Инициализация точки доступа
     void WIFI_AP_INIT();
 
-    //Инициализация точки доступа
-    void AP_CONNECT();
-
     //Инициализация настроек для подключения к 
     //существующей сети WiFi
     void WIFI_STA_INIT();
@@ -64,18 +65,24 @@ class MODBUS_TCP_SLAVE
   
    private:
 
-        //Установка статического IP
-        IPAddress ip     (192, 168, 4, 1); 
-        IPAddress gateway(192, 168, 4, 1);
-        IPAddress subnet (255, 255, 255, 0);
+        //IP адрес
+        IPAddress ip = IPAddress(192,168,4,1); 
+
+        //Шлюз
+        IPAddress gateway  = IPAddress(192, 168, 4, 1);
+
+        //Маска сети
+        IPAddress subnet  = IPAddress(255, 255, 255, 0);
+
+        //MAC адрес
         uint8_t MAC[6] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
 
 
         //Буфер байтов
-        byte ByteArray[260];
+        byte ByteArray[128];
 
         //Клиент и сервер
-        WiFiServer MBServer(MODBUS_TCP_PORT);
+        WiFiServer MBServer = WiFiServer(MODBUS_TCP_PORT);
         WiFiClient client;
 
         //Проверка MAC адреса
@@ -84,8 +91,6 @@ class MODBUS_TCP_SLAVE
         //Длина принятых данных
         int RECIVED_BYTES_LENGTCH = 0;
 
-       
-        
         //Метод для чтения HOLDING регистров
         void READ_HOLDING_REGISTERS();
 
@@ -98,3 +103,5 @@ class MODBUS_TCP_SLAVE
         //Метод для обработки пакета принятых данных
         void MB_NEW_DATA_PROCESSING();
 };
+
+#endif
