@@ -14,7 +14,7 @@ Button::Button(int pin)
     pinMode(pin, INPUT);
 
     //Подтягиваем пин к плюсу питания
-    digitalWrite(pin, HIGH);
+    //digitalWrite(pin, HIGH);
 
     //Запускаем таймер
     Timer.Start();
@@ -22,7 +22,12 @@ Button::Button(int pin)
 
 bool Button::Read()
 {
-    return digitalRead(pin);
+    return touchRead(pin) < 20;
+}
+
+bool Button::IsPressed()
+{
+   return !Read();
 }
 
 //Сброс
@@ -33,10 +38,10 @@ void Button::Reset()
 
 bool Button::FrontPositive()
 {
-    bool state = digitalRead(pin);
+    bool state = IsPressed();
 
     //Если состояние кнопки изменилось с 0 на 1
-    if(oldState == true && state == false)
+    if(oldState == false && state == true)
     {
         //Запоминаем время, когда кнопка нажата
         TimeIsFrontPositive = millis();

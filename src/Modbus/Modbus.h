@@ -1,8 +1,8 @@
 #ifndef MODBUS_TCP_H
 #define MODBUS_TCP_H
 
-#include <ESP8266WiFi.h>
-//#include <WiFi.h>
+//#include <ESP8266WiFi.h>
+#include <WiFi.h>
 
 //Максимальное количество HOLDING регистров
 #define MAX_HOLDING_REGISTERS 37
@@ -61,6 +61,9 @@ class MODBUS_TCP_SLAVE
     //Обновление данных. Метод вызывается в loop
     //Метод для чтения данных из TCP порта
     void MODBUS_UPDATE();
+    
+    //Флаг, разрешающий работу WiFi
+    bool WiFi_State;
       
   
    private:
@@ -77,6 +80,8 @@ class MODBUS_TCP_SLAVE
         //MAC адрес
         uint8_t MAC[6] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
 
+        //Флаг, помнящий предыдущее состояние флага, разрешающего работу WiFi
+        bool WiFi_Old_State;
 
         //Буфер байтов
         byte ByteArray[128];
@@ -84,6 +89,9 @@ class MODBUS_TCP_SLAVE
         //Клиент и сервер
         WiFiServer MBServer = WiFiServer(MODBUS_TCP_PORT);
         WiFiClient client;
+
+        //Функция для управления WiFi
+        void WiFi_CONTROL();
 
         //Проверка MAC адреса
         bool _checkMacAddres(byte array[]);

@@ -26,17 +26,20 @@
 void Menu::Begin()
 {
     //Символ карандаша
-    byte Edit[8] = 
-    {
-	    0b00011,
-	    0b00000,
-	    0b00110,
-	    0b00110,
-	    0b01100,
-	    0b01100,
-	    0b11000,
-	    0b10000
-    };
+    byte Edit[8] = {0b00011, 0b00000, 0b00110, 0b00110, 0b01100, 0b01100, 0b11000, 0b00000};
+
+    //Буква Я
+     byte YA[8] = {B01111,B10001,B10001,B01111,B00101,B01001,B10001,B00000,}; // Буква "Я"
+
+
+    //Буква Л
+     byte L[8] = {B00011,B00111,B00101,B00101,B01101,B01001,B11001,B00000,}; // Буква "Л"
+
+
+    //Буква Ы
+     byte A[8] = {B10001,B10001,B10001,B11001,B10101,B10101,B11001,B00000,}; // Буква "Ы"
+
+     byte I[8]   = {B10001,B10011,B10011,B10101,B11001,B11001,B10001,B00000,}; // Буква "И"
 
    
     //Инициализируем дисплей
@@ -45,6 +48,10 @@ void Menu::Begin()
 
     //Загружаем символ в lcd
     LCD->createChar(0, Edit);
+    LCD->createChar(1, YA);
+    LCD->createChar(2, L);
+    LCD->createChar(3, A);
+    LCD->createChar(4, I);
 
     //Запускаем вспомогательный таймер, который
     //впоследствии передаем в каждый Item для анимации
@@ -184,7 +191,7 @@ void Menu::NavigationOfWriteMode()
         //Если кнопка вверх удерживается
         //тогда по хитроумной формуле изменяем 
         //значение нашей переменной
-        if(BtnUp->Read() == false)
+        if(BtnUp->IsPressed() == false)
         {
             int additive = BtnUp->GetAdditive();
             Array[ActiveScreen]->AddValue(additive);
@@ -205,7 +212,7 @@ void Menu::NavigationOfWriteMode()
 
         //Если кнопка нажата, пытаемся имзменить
         //значение, по хитрой формуле
-        if(BtnDown->Read() == false)
+        if(BtnDown->IsPressed() == false)
         {
             int additive = BtnDown->GetAdditive();
             Array[ActiveScreen]->SubValue(additive);
@@ -252,7 +259,6 @@ void Menu::Update()
     //Отображаем экран, который надо показать
     Array[ActiveScreen]->Display(LCD, Mode, &Timer_2Hz);   
 
-    
 
     //Если сработал таймер, тогда возвращаемся на экран 0
     if(Timer.IsTick())
@@ -279,4 +285,42 @@ void Menu::Update()
 
         
     }
+}
+
+void Menu::CreateBoolScreen(char* Header, bool* value)
+{
+    //Если превышено максимальное количество 
+    //пунктов меню, тогда пропускаем дальнейшие шаги
+    if(ScreenCount >= MAX_SCEEN)
+    {
+        return;
+    }
+
+    //Иначе создаем экран
+    BoolItem screen = BoolItem(Header,  value);
+
+    //Добавляем указатель на экран
+    Array[ScreenCount] = &screen;
+
+    //Инкрементируем счетчик экранов
+    ScreenCount++;
+}
+
+void Menu::CreateTimeScreen(char* Header, int* value)
+{
+    //Если превышено максимальное количество 
+    //пунктов меню, тогда пропускаем дальнейшие шаги
+    if(ScreenCount >= MAX_SCEEN)
+    {
+        return;
+    }
+
+    //Иначе создаем экран
+    TimeItem screen = TimeItem(Header,  value);
+
+    //Добавляем указатель на экран
+    Array[ScreenCount] = &screen;
+
+    //Инкрементируем счетчик экранов
+    ScreenCount++;
 }

@@ -1,8 +1,8 @@
 #ifndef VALVE_H
 #define VALVE_H
 
-#include <ESP8266WiFi.h>
-//#include <WiFi.h>
+//#include <ESP8266WiFi.h>
+#include <WiFi.h>
 #include "EEPROM.h"
 
 //Определения для регистров времени

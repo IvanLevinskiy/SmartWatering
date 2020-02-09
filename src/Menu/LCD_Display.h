@@ -4,6 +4,12 @@
 #include <inttypes.h>
 #include <Print.h>
 
+#if !defined(AVR)
+#define uint_farptr_t       uint8_t*
+#define memcpy_PF           memcpy_P
+#define pgm_get_far_address
+#endif
+
 // commands
 #define LCD_CLEARDISPLAY 0x01
 #define LCD_RETURNHOME 0x02
@@ -109,6 +115,16 @@ public:
 	virtual size_t write(uint8_t);
 	void command(uint8_t);
 
+	/**
+	void print(const wchar_t[]);
+  	void print(const char[]);
+  	void print(int, int = DEC);
+  	void print(unsigned int, int = DEC);
+  	void print(long, int = DEC);
+  	void print(unsigned long, int = DEC);
+  	void print(const String &);
+  	void print(double, int = 2);
+	  **/
 	//Печать заголовка меню
 	void printHeader(char* header);
 
@@ -122,6 +138,7 @@ public:
 	void AnimationStop();
 
 	void printIntAsTime(int time);
+	wchar_t *asciiutf8(unsigned char);
 	 
 private:
 	void send(uint8_t, uint8_t);
@@ -137,8 +154,18 @@ private:
 	uint8_t _charsize;
 	uint8_t _backlightval;
 	uint8_t AnimationStep;
-	
 
+	/**
+	void CharSetToLCD(uint8_t *, uint8_t *);
+  	void ResetAllIndex();
+  	//void printwc(const wchar_t);
+  	uint8_t mbtowc(wchar_t *, char *, uint8_t);
+	
+  	int symbol_index;//Индекс символа (от 0 до 7)
+  	uint8_t cursor_col;
+  	uint8_t cursor_row;
+	**/
 };
+
 
 #endif // FDB_LIQUID_CRYSTAL_I2C_H

@@ -2,15 +2,15 @@
 #define MENU_H
 
 #include <Wire.h>
-#include <ESP8266WiFi.h>
-//#include <Arduino.h>
+//#include <ESP8266WiFi.h>
+#include <Arduino.h>
 #include "Menu/Enumeration.h"
 #include "Menu/MenuButton.h"
 #include "Menu/Items.h"
 #include "Menu/LCD_Display.h"
 
 
-#define MAX_SCEEN 20
+#define MAX_SCEEN 30
 
 //Класс, осуществляющий реализацию движка
 //меню
@@ -73,6 +73,18 @@ public:
 
     //метод для добавления нового экрана
     void AddScreen(BaseItem *screen);
+
+    //Метод для создания
+    //и добавления в коллекцию экранов
+    //экрана, позволяющее редактировать
+    //булевы значения
+    void CreateBoolScreen(char* Header, bool* value);
+
+    //Метод для создания
+    //и добавления в коллекцию экранов
+    //экрана, позволяющее редактировать
+    //временные значения, представленные типом int
+    void CreateTimeScreen(char* Header, int* value);
 
     //Метод, осуществляющий запуск инициализации
     void Begin();

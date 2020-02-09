@@ -1,94 +1,100 @@
 #include <Modbus/Modbus.h>
-//#include <WiFi.h>
-//#include <Valve/Valve.h>
+#include <Valve/Valve.h>
 //#include <Ticker.h>
-//#include <Menu/Menu.h>
-//#include "Menu/Items.h"
+#include <Menu/Menu.h>
+#include "Menu/Items.h"
 
-//Объявление экземпляра класса MODBUS_TCP_SLAVE
-//MODBUS_TCP_SLAVE MODBUS;
-/**
-#pragma region ОПРЕДЕЛЕНИЯ
+#pragma region ОБЪЯВЛЕНИЕ ОБЪЕКТОВ
 
-#define CURRUNT_TIME        MODBUS.MB_HOLDING_REGISTERS[5] //Текущее время в минутах
-#define SECONDS             MODBUS.MB_HOLDING_REGISTERS[6] //Количество секунд
- 
-#define TEMPERATURE_AIR     MODBUS.MB_HOLDING_REGISTERS[0] //Температура воздуха
-#define TEMPERATURE_WAITER  MODBUS.MB_HOLDING_REGISTERS[1] //Температура воды в баке
-#define TEMPERATURE_T1      MODBUS.MB_HOLDING_REGISTERS[2] //Температура воздуха
-#define TEMPERATURE_T2      MODBUS.MB_HOLDING_REGISTERS[3] //Температура воздуха
-#define LEVEL_WAITER        MODBUS.MB_HOLDING_REGISTERS[4] //Уровень воды в баке
+  //ЭКЗЕМПЛЯР MODBUS
+  MODBUS_TCP_SLAVE* MODBUS;
+
+  //ЭКЗЕМПЛЯРЫ КЛАПАНОВ
+  Valve*  Valve_1;
+  Valve*  Valve_2;
+  Valve*  Valve_3;
+  Valve*  Valve_4;
+
+  /*
+  * УКАЗАТЕЛЬ ЭКЗЕМПЛЯР КЛАССА Menu
+  */
+  Menu* MainMenu;
 
 #pragma endregion
 
-**/
+#pragma region ОПРЕДЕЛЕНИЯ РЕГИСТРОВ
+
+  #define CURRUNT_TIME        MODBUS.MB_HOLDING_REGISTERS[5] //Текущее время в минутах
+  #define SECONDS             MODBUS.MB_HOLDING_REGISTERS[6] //Количество секунд
+ 
+  #define TEMPERATURE_AIR     MODBUS.MB_HOLDING_REGISTERS[0] //Температура воздуха
+  #define TEMPERATURE_WAITER  MODBUS.MB_HOLDING_REGISTERS[1] //Температура воды в баке
+  #define TEMPERATURE_T1      MODBUS.MB_HOLDING_REGISTERS[2] //Температура воздуха
+  #define TEMPERATURE_T2      MODBUS.MB_HOLDING_REGISTERS[3] //Температура воздуха
+  #define LEVEL_WAITER        MODBUS.MB_HOLDING_REGISTERS[4] //Уровень воды в баке
+
+#pragma endregion
+
 
 #pragma region ИНИЦИАЛИЗАЦИЯ ЭКЗКМПЛЯРОВ ОБЪЕКТОВ И ПЕРЕМЕННЫХ ПРОГРАММЫ
 
 //Таймер - счетчик
 //Ticker timer;
 
-//Инициализация клапанов
-//Valve  Valve_1;
-//Valve  Valve_2;
-//Valve  Valve_3;
-//Valve  Valve_4;
+//СИСТЕМНЫЕ ПЕРЕМЕННЫЕ
+bool WiFi_ST;
 
 #pragma endregion
 
 #pragma region ИНИЦИАЛИЗАЦИЯ МЕНЮ
 
-/*
-* Экземпляркласса Menu
-*/
-//Menu MainMenu = Menu(0x20, 2, 3, 4);
 
-/*
+
+/**
 * Метод для инициализации меню
-*/
+**/
+bool temp = false;
+int t = 56;
+
 void MenuInitialize()
 {
-  
-  //Создание экранов меню
-  //MainMenu.AddScreen(new StartScreenItem("SMART", "WATERING"));
-  //MainMenu.AddScreen(new BoolItem("WIFI STATE      ", &(WiFi_ST)));
-  //MainMenu.AddScreen(new BoolItem("COIL 1 FORCE    ", &(C1_Force)));
-  //MainMenu.AddScreen(new BoolItem("COIL 2 FORCE    ", &(C2_Force)));
-  //MainMenu.AddScreen(new BoolItem("COIL 3 FORCE    ", &(C3_Force)));
-  //MainMenu.AddScreen(new BoolItem("COIL 4 FORCE    ", &(C4_Force)));
-  //MainMenu.AddScreen(new TimeItem("COIL 1 TIME STRT", &(Values[0])));
+  //Стартовый экран
+  MainMenu->AddScreen(new StartScreenItem("SMART", "WATERING"));
 
-  /**
-  MainMenu.AddScreen(new TimeItem("CURRENT TIME    ", &(CURRUNT_TIME)));
+  //СИСТЕМА
+  //Время
+  MainMenu->CreateTimeScreen("C\4CTEMHOE BPEM\1",  &t);
 
-  MainMenu.AddScreen(new TimeItem("COIL 1 TIME STRT", &(MODBUS.MB_HOLDING_REGISTERS[15])));
-  MainMenu.AddScreen(new TimeItem("COIL 1 TIME END ", &(MODBUS.MB_HOLDING_REGISTERS[16])));
 
-  MainMenu.AddScreen(new TimeItem("COIL 2 TIME STRT", &(MODBUS.MB_HOLDING_REGISTERS[21])));
-  MainMenu.AddScreen(new TimeItem("COIL 2 TIME END ", &(MODBUS.MB_HOLDING_REGISTERS[22])));
+  //Статус WiFi
+  MainMenu->CreateBoolScreen("WI-FI           ",  &MODBUS->WiFi_State);
 
-  MainMenu.AddScreen(new TimeItem("COIL 3 TIME STRT", &(MODBUS.MB_HOLDING_REGISTERS[27])));
-  MainMenu.AddScreen(new TimeItem("COIL 3 TIME END ", &(MODBUS.MB_HOLDING_REGISTERS[28])));
+  //Настройки автоматическое вкл реле
+  MainMenu->CreateBoolScreen("PE\2E 1 FORCE",  &temp);
+  MainMenu->CreateTimeScreen("PE\2E 1 BP. BK\2  ",  &t);
+  MainMenu->CreateTimeScreen("PE\2E 1 BP. B\3K\2 ", &t);
 
-  MainMenu.AddScreen(new TimeItem("COIL 4 TIME STRT", &(MODBUS.MB_HOLDING_REGISTERS[33])));
-  MainMenu.AddScreen(new TimeItem("COIL 4 TIME END ", &(MODBUS.MB_HOLDING_REGISTERS[34])));
-**/
+
+  MainMenu->CreateBoolScreen("PE\2E 2 FORCE",  &temp);
+  MainMenu->CreateTimeScreen("PE\2E 2 BP. BK\2  ",  &t);
+  MainMenu->CreateTimeScreen("PE\2E 2 BP. B\3K\2 ", &t);
+
+  MainMenu->CreateBoolScreen("PE\2E 3 FORCE",  &temp);
+  MainMenu->CreateTimeScreen("PE\2E 3 BP. BK\2  ",  &t);
+  MainMenu->CreateTimeScreen("PE\2E 3 BP. B\3K\2 ", &t);
+ /**
+  MainMenu->CreateBoolScreen("PE\2E 4 FORCE",  &temp);
+  MainMenu->CreateTimeScreen("PE\2E 4 BP. BK\2  ",  &t);
+  MainMenu->CreateTimeScreen("PE\2E 4 BP. B\3K\2 ", &t);
+  **/
+
   //Запускаем меню
-  //MainMenu.Begin();
+  MainMenu->Begin();
+
 }
 
 #pragma endregion
 
-
-//ПОКА ЧТО ЗНАЧЕНИЯ ЗАДАНЫ СТАТИЧНО
-void DataProcess_Update()
-{
-    //TEMPERATURE_AIR = 23;
-    //TEMPERATURE_WAITER = 13; 
-    //TEMPERATURE_T1 = 22;     
-    //TEMPERATURE_T2 = 21;    
-    //LEVEL_WAITER = analogRead(A0);
-}
 
 //Обработка тиков
 void timer_tick() 
@@ -122,41 +128,30 @@ void timer_tick()
   //Valve_4.Update();
 }
 
-void MB_NEW_DATA_RECIVED()
-{
-  //Обновление данных в клапанах
-  // Valve_1.UpdateRegister();
-  // Valve_2.UpdateRegister();
-  // Valve_3.UpdateRegister();
-   //Valve_4.UpdateRegister();
-}
-
-
 void setup() 
 { 
   //Инициализируем последовательный порт
   //для вывода информации диагностики
-  //Serial.begin(115200);
+  Serial.begin(115200);
+
+  MainMenu = new Menu(0x27, 4, 2, 15);
+
+  //Инициализация меню
+  MenuInitialize();
 
   //Инициализация EEPROM
-  //EEPROM.begin(512);
+  EEPROM.begin(512);
 
-  //Valve_1 = Valve(13, 14, MODBUS.MB_HOLDING_REGISTERS);
-  //Valve_2 = Valve(12, 20, MODBUS.MB_HOLDING_REGISTERS);
- // Valve_3 = Valve(14, 26, MODBUS.MB_HOLDING_REGISTERS);
-  //Valve_4 = Valve(4,  32, MODBUS.MB_HOLDING_REGISTERS);
-
-  //Создаем сеть с  MODBUS
- // MODBUS.WIFI_AP_INIT();
+  Valve_1 = new Valve(13, 14, MODBUS->MB_HOLDING_REGISTERS);
+  Valve_2 = new Valve(12, 20, MODBUS->MB_HOLDING_REGISTERS);
+  Valve_3 = new Valve(14, 26, MODBUS->MB_HOLDING_REGISTERS);
+  Valve_4 = new Valve(4,  32, MODBUS->MB_HOLDING_REGISTERS);
 
   //Подпись на событие тика
- // timer.attach(1, timer_tick);
+  //timer.attach(1, timer_tick);
 
 }
 
-//Переменная для вызова методов
-//кадждую секунду
-long millis_1Hz;
 
 //Бесконечный цикл
 void loop() 
@@ -174,8 +169,7 @@ void loop()
       
   //Обновление значений регистров MODBUS 
   //(если пришел запроса на их изменение) 
-  //MODBUS.MODBUS_UPDATE();
-
-  //MainMenu.Update();
+  MODBUS->MODBUS_UPDATE();
+  MainMenu->Update();
 
 }

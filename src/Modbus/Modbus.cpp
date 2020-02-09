@@ -57,7 +57,39 @@ void MODBUS_TCP_SLAVE::WIFI_STA_INIT()
     }
 
     MBServer.begin();
-}       
+}    
+
+//Управление WiFi адаптером
+void MODBUS_TCP_SLAVE::WiFi_CONTROL()
+{
+    //Если состояние WiFi не изменилось
+    //тогда выходим из функции
+    if(WiFi_State == WiFi_Old_State)
+    {
+        return;
+    }
+
+    //Если флаг, разрешающий разворачивание WiFi сети
+    //изменился на TRUE, тогда запускаем WiFi точку доступа
+    if(WiFi_State == true && WiFi_Old_State == false)
+    {
+      WIFI_AP_INIT();
+      WiFi_Old_State = WiFi_State;
+      Serial.println("WiFi_State == true");
+      return;
+    }
+
+    //Если флаг, разрешающий разворачивание WiFi сети
+    //изменился на FALSE, тогда закрываем WiFi точку доступа
+    if(WiFi_State == false && WiFi_Old_State == true)
+    {
+      WiFi.disconnect();
+      WiFi.mode(WIFI_OFF);
+      WiFi_Old_State = WiFi_State;
+      Serial.println("WiFi_State == false");
+      return;
+    }
+}
 
 //Функция, котороя обрабатывает запрос от сервера
 //на чтение HOLDING регистров
@@ -124,15 +156,9 @@ void MODBUS_TCP_SLAVE::READ_HOLDING_REGISTERS()
    client.write((const uint8_t *)ByteArray, 6 + MESSAGE_LENGTCH);
    MB_FUNCTION = MB_FC_NONE;
    
-   Serial.print("SEND: ");
+   //Serial.print("SEND: ");
 
-   for(int i = 0; i < 6 + MESSAGE_LENGTCH; i++) 
-  {
-      Serial.print( ByteArray[i] );
-      Serial.print(" ");
-  }
-
-  Serial.println("");
+  //Serial.println("");
 }
 
 void MODBUS_TCP_SLAVE::WRITE_SINGLE_HOLDING_REGISTER()
@@ -257,14 +283,23 @@ void MODBUS_TCP_SLAVE::MB_NEW_DATA_PROCESSING()
       }
 }
 
+//Обновление данных MODBUS
 void MODBUS_TCP_SLAVE::MODBUS_UPDATE()
 { 
+  //Вызываем метод, осуществляющий 
+  //управление подключением по WiFi
+  WiFi_CONTROL();
+  
+  //Если WiFi выключен, выходим из функции
+  if(WiFi_State == false)
+  {
+      return;
+  }
+
   //Если клиента нет, пытаемся его подключить
   if(! client)
   {
       client = MBServer.available();
-      Serial.println(WiFi.softAPIP());
-      Serial.println(":  MODBUS  not client");
       delay(100);
       return;   
   }
@@ -273,19 +308,14 @@ void MODBUS_TCP_SLAVE::MODBUS_UPDATE()
     //Читаем телеграмму
     if(client.available() > 0) 
     {
-       Serial.print("\n\n\nRECIVED: ");   
        RECIVED_BYTES_LENGTCH = 0;
 
-       
        while(client.available()) 
        {
          ByteArray[RECIVED_BYTES_LENGTCH] = client.read();
-         Serial.print(ByteArray[RECIVED_BYTES_LENGTCH]);
-         Serial.print(" ");
          RECIVED_BYTES_LENGTCH++;
        }
          
-        Serial.print("\n");
         client.flush();
 
         MB_NEW_DATA_PROCESSING();

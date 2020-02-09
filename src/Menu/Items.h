@@ -324,3 +324,112 @@ class StartScreenItem : public BaseItem
 };
 
 #endif
+
+#ifndef WORD_ITEM_H
+#define WORD_ITEM_H
+
+//Класс для редактирования булевых переменных
+class WordItem : public BaseItem
+{
+
+    private:
+
+    public:
+
+        /**
+         *Конструктор
+         *header - заголовок экрана
+         *object - объект, связанный с текущим экраном
+        **/
+        WordItem(char* header, void * registr)
+        {
+            //Передаем в экземпляр класса заголовок, 
+            //который отображаться вверху дисплея
+            Header = header;
+
+            //Передаем указатель на элемент массива
+            //в свойства класса
+            Pointer = registr;
+        }
+
+        String BoolToStr(bool val)
+        {
+            if(val == true) return "  ON";
+
+            return " OFF";
+            
+        }
+
+        int fl;
+        //Метод для отображения
+        void Display(LCD_Display* LCD, MenuMode mode, Timer_SD* Timer_2Hz) override
+        {
+            
+            //Обновляем состояние таймера
+            Timer_2Hz->Update();
+
+            //Получаем указатель на переменную
+            short* pointer = (short*)Pointer;
+            short value = *pointer;
+
+            //Печатаем в дисплей то значение, которое планируем изменить
+            LCD->setCursor(12, 1);
+            LCD->print(BoolToStr(value));
+
+            if(mode == ReadMode)
+            {
+                LCD->printHeader(Header);
+
+                //Затираем карандаш
+                LCD->AnimationStop();
+                return;
+            }
+
+            //Мигаем
+            if(Timer_2Hz->IsTick())
+            {    
+                LCD->AnimationEdit();
+                return;
+            }
+	            
+        }
+
+        //Добавляет к значению 1
+        void UpValue() override
+        {
+            //Получаем указатель на переменную
+            bool* pnt = (bool*)Pointer;
+            
+            //получаем значение из указателя
+            bool value = *pnt;
+
+            //Записываем новое значение в память
+            *pnt = !value;
+        }
+
+        //Вычитает из значения 1
+        void DownValue() override
+        {
+            //Получаем указатель на переменную
+            bool* pnt = (bool*)Pointer;
+            
+            //получаем значение из указателя
+            bool value = *pnt;
+
+            //Записываем новое значение в память
+            *pnt = !value;
+        }
+
+        void AddValue(int num)  override
+        {
+
+        }
+
+        void SubValue(int num)  override
+        {
+
+        }
+       
+};
+
+#endif

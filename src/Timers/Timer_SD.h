@@ -1,9 +1,11 @@
-//#include <Arduino.h>
+//
 
 #ifndef TIMER_SD_H
 #define TIMER_SD_H
 
-#include <ESP8266WiFi.h>
+//#include <ESP8266WiFi.h>
+#include <Arduino.h>
+
 
 class Timer_SD
 {
