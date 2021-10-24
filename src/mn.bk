@@ -1,0 +1,126 @@
+//#include <Modbus/Modbus.h>
+//#include <Valve/Valve.h>
+//#include <Ticker.h>
+//#include <Menu/Menu.h>
+//#include "Menu/Encoder.h"
+#include<WiFi.h>
+
+#pragma region ОБЪЯВЛЕНИЕ ОБЪЕКТОВ
+
+  //ЭКЗЕМПЛЯР MODBUS
+  //MODBUS_TCP_SLAVE* MODBUS;
+
+  //ЭКЗЕМПЛЯРЫ КЛАПАНОВ
+  //Valve*  Valve_1;
+  //Valve*  Valve_2;
+  //Valve*  Valve_3;
+  //Valve*  Valve_4;
+
+  /*
+  * УКАЗАТЕЛЬ ЭКЗЕМПЛЯР КЛАССА Menu
+  */
+  //Menu* MainMenu;
+
+  
+  //Encoder enc = Encoder(17, 16, 0);
+  int cnt;
+
+#pragma endregion
+
+#pragma region ОПРЕДЕЛЕНИЯ РЕГИСТРОВ
+/**
+  #define CURRUNT_TIME        MODBUS.MB_HOLDING_REGISTERS[5] //Текущее время в минутах
+  #define SECONDS             MODBUS.MB_HOLDING_REGISTERS[6] //Количество секунд
+ 
+  #define TEMPERATURE_AIR     MODBUS.MB_HOLDING_REGISTERS[0] //Температура воздуха
+  #define TEMPERATURE_WAITER  MODBUS.MB_HOLDING_REGISTERS[1] //Температура воды в баке
+  #define TEMPERATURE_T1      MODBUS.MB_HOLDING_REGISTERS[2] //Температура воздуха
+  #define TEMPERATURE_T2      MODBUS.MB_HOLDING_REGISTERS[3] //Температура воздуха
+  #define LEVEL_WAITER        MODBUS.MB_HOLDING_REGISTERS[4] //Уровень воды в баке
+**/
+#pragma endregion
+
+
+#pragma region ИНИЦИАЛИЗАЦИЯ ЭКЗКМПЛЯРОВ ОБЪЕКТОВ И ПЕРЕМЕННЫХ ПРОГРАММЫ
+
+//Таймер - счетчик
+//Ticker timer;
+
+//СИСТЕМНЫЕ ПЕРЕМЕННЫЕ
+bool WiFi_ST;
+
+#pragma endregion
+
+#pragma region ИНИЦИАЛИЗАЦИЯ МЕНЮ
+
+/**
+* Метод для инициализации меню
+**/
+
+void MenuInitialize()
+{
+  //Построение меню
+ // MainMenu->Build(MODBUS);
+  
+  //Запускаем меню
+  //MainMenu->Begin();
+}
+
+#pragma endregion
+
+
+void setup() 
+{ 
+  //Инициализируем последовательный порт
+  //для вывода информации диагностики
+  Serial.begin(115200);
+
+  //MainMenu = new Menu(0x27, 4, 2, 15);
+
+  /**
+  //Инициализация меню
+  MenuInitialize();
+
+  //Инициализация EEPROM
+  EEPROM.begin(512);
+
+
+  //Инициализация клапан 1
+  Valve_1 = new Valve(13, 14, MODBUS->MB_HOLDING_REGISTERS);
+
+  //Инициализация клапан 2
+  Valve_2 = new Valve(12, 20, MODBUS->MB_HOLDING_REGISTERS);
+
+  //Инициализация клапан 3
+  Valve_3 = new Valve(14, 26, MODBUS->MB_HOLDING_REGISTERS);
+
+  //Инициализация клапан 4
+  Valve_4 = new Valve(4,  32, MODBUS->MB_HOLDING_REGISTERS);
+  **/
+
+}
+
+//Бесконечный цикл
+void loop() 
+{      
+/**
+    EncoderState st = enc.Update();
+
+    if(st == EncoderUp)
+    {
+      cnt ++;
+    }
+
+    if(st == EncoderDown)
+    {
+      cnt --;
+    }
+
+    Serial.println(cnt);
+**/
+
+  //Обновление значений регистров MODBUS 
+  //(если пришел запроса на их изменение) 
+  //MODBUS->MODBUS_UPDATE();
+  //MainMenu->Update();
+}

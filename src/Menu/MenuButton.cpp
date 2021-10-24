@@ -12,6 +12,7 @@ Button::Button(int pin)
 
     //Настраиваем пин как вход
     pinMode(pin, INPUT);
+    digitalWrite(pin, HIGH);
 
     //Подтягиваем пин к плюсу питания
     //digitalWrite(pin, HIGH);
@@ -22,7 +23,7 @@ Button::Button(int pin)
 
 bool Button::Read()
 {
-    return touchRead(pin) < 20;
+    return digitalRead(pin);
 }
 
 bool Button::IsPressed()

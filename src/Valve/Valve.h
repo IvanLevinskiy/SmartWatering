@@ -2,7 +2,7 @@
 #define VALVE_H
 
 //#include <ESP8266WiFi.h>
-#include <WiFi.h>
+#include <Arduino.h>
 #include "EEPROM.h"
 
 //Определения для регистров времени
@@ -34,26 +34,24 @@ class Valve
     //Время окончания полива, мин
     uint16_t  EndTime;
 
+    bool State;
+
     //Конструктор класса
     Valve();
 
     //Конструктор класса
     //_pin - пин, к которому подключен клапан
-    Valve(int _pin, int _firstRegister, uint16_t *PNT_MB_HOLDING_REGISTERS);
+    Valve(int _firstRegister, uint16_t *PNT_MB_HOLDING_REGISTERS);
 
     //Обновление данных. Метод вызывается в loop
     //Управляет логикой
     void Update();
-   
+
     //Получаем регистр, СЛОВО УПРАВЛЕНИЯ и другие
     void UpdateRegister();
-   
-  
-   private:  
-          
-          //Пин, к которому подключен
-          //клапан
-          int pin;
+
+
+   private:
 
           //Состояние HRegister
           uint16_t CONTROL_WORD;
@@ -66,6 +64,8 @@ class Valve
 
           //Получаем бит из слова
           bool GetBit(uint16_t _value, int _bit);
+
+          uint16_t CheckValue(uint16_t _value);
 };
 
 #endif

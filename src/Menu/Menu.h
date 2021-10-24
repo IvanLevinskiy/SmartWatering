@@ -2,13 +2,19 @@
 #define MENU_H
 
 #include <Wire.h>
-//#include <ESP8266WiFi.h>
-#include <Arduino.h>
-#include "Menu/Enumeration.h"
-#include "Menu/MenuButton.h"
-#include "Menu/Items.h"
-#include "Menu/LCD_Display.h"
-
+#include "RTClib.h"
+#include "Menu/BaseItem.h"
+#include "Menu/BoolItem.h"
+#include "Menu/TimeItem.h"
+#include <RotaryEncoder.h>
+#include <Menu/MenuButton.h>
+#include <LiquidCrystal_I2C.h>
+#include "Menu/ReturnItem.h"
+#include "Menu/ContentItem.h"
+#include "Menu/TextViewItem.h"
+#include "Menu/ControlWordItem.h"
+#include "Menu/SystemTimeItem.h"
+#include "Menu/NumericViewItem.h"
 
 #define MAX_SCEEN 30
 
@@ -18,45 +24,7 @@ class Menu
 {
     private:
 
-    //Объявляем массив указателей на класс BaseItem()
-    BaseItem *Array[MAX_SCEEN];
-
-    //Объявляем указатель на класс BaseItem
-    BaseItem *ptr;  
-
-    //Количество экранов
-    int ScreenCount;
-
-    //Указатель на экземпляр дисплея
-    LCD_Display* LCD;
-
-    //Показывает уровень меню (нужна для навигации)
-    //по меню
-    int ActiveScreen;
-
-    //Таймер, который будет отслеживаать бездействие
-    Timer_SD Timer = Timer_SD(60000);
-
-    //Таймер, который передается в каждый экран
-    //и необходиый в основном для анимации
-    Timer_SD Timer_2Hz = Timer_SD(500);
-
-    //Определения для кнопок, по которым осуществляется 
-    //навигация по меню
-    Button* BtnUp;
-    Button* BtnDown;
-    Button* BtnSelect;
-
-    //Режим меню
-    MenuMode Mode = ReadMode;
-
-    void NavigationOfReadMode();
-    void NavigationOfWriteMode();
-
-    //Метод для сбросы режима сна
-    void SleepCancel();
-
-public:
+    public:
 
     //Конструктор класса
     Menu();
@@ -69,38 +37,74 @@ public:
 	 * @param pinDown	Пин, к которму подключена кнопка вниз
 	 * @param pinSelect	Пин, к которму подключена кнопка выбора
 	 */
-    Menu(uint8_t LCD_ADDR, int pinUp, int pinDown, int pinSelect);
+    Menu(uint8_t LCD_ADDR);
+
+
+    Menu(LiquidCrystal_I2C* lcd);
+
+    //Объявляем массив указателей на класс BaseItem()
+    ContentItem *Array[MAX_SCEEN];
+
+    //Количество экранов
+    int ScreenCount = 0;
+
+    //Указатель на экземпляр дисплея
+    LiquidCrystal_I2C* LCD;
+
+    //Показывает уровень меню (нужна для навигации)
+    //по меню
+    int ActiveScreen;
+
+    //Таймер, который будет отслеживаать бездействие
+    Timer_SD Timer = Timer_SD(60000);
+
+    //Таймер, который передается в каждый экран
+    //и необходиый в основном для анимации
+    Timer_SD Timer_2Hz = Timer_SD(500);
+
+    //Старый режим меню
+    MenuMode OldMode = ReadMode;
+
+    //Метод для сбросы режима сна
+    void SleepCancel();
+
+    //Временная переменная для хранения
+    //состояния энкодера
+    EncoderState State;
+
+    //Указатель на экземпляр класса часов реального времени
+    RTC_DS3231* RTC;
 
     //метод для добавления нового экрана
-    void AddScreen(BaseItem *screen);
-
-    //Метод для создания
-    //и добавления в коллекцию экранов
-    //экрана, позволяющее редактировать
-    //булевы значения
-    void CreateBoolScreen(char* Header, bool* value);
-
-    //Метод для создания
-    //и добавления в коллекцию экранов
-    //экрана, позволяющее редактировать
-    //временные значения, представленные типом int
-    void CreateTimeScreen(char* Header, int* value);
+    void AddScreen(ContentItem *screen);
 
     //Метод, осуществляющий запуск инициализации
     void Begin();
 
+    //Загрузка пользовательского символа
+    void createSymbol(int pos, byte symbol []);
+
     //Метод, осуществляющий обновление данных
     void Update();
 
-    //Метод для навигации по меню
-    void Navigation();
+    //Построение меню
+    void Build();
+
+    //Метод для привязки часов реального времени к меню
+    void BindingRTC(RTC_DS3231* rtc);
+
+     //Метод, который генерируется когда
+    //нажимается кнопка вверх
+    void UpCMD();
+
+    //Метод, который генерируется когда
+    //нажимается кнопка вниз
+    void DownCMD();
+
+    //Метод, который генерируется когда
+    //нажимается кнопка выбора
+    void SelectCMD();
+
 };
 
 #endif
-
-
-
-
-
-
-

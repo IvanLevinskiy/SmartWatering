@@ -19,12 +19,17 @@ class Timer_SD
         /**
 	    * Время, заданное для сроботки таймера
 	    */
-        long time;
+        unsigned long time;
 
         /**
 	    * Время, мс прошлого срабатывания таймера
 	    */
-        long oldMillis;
+        unsigned long oldMillis;
+
+        /**
+	    * Текущее время
+	    */
+        unsigned long currentTime;
 
         /**
 	    * Статус флага
@@ -36,12 +41,15 @@ class Timer_SD
 	    */
         bool Blink_State;
 
+        //Состояние выходного сигнала
+        bool Output_State;
+
         /**
 	    * Время до сработки таймера
 	    */
         long value;
 
-public:
+        public:
         /**
 	    * Конструктор класса
 	    */
@@ -65,6 +73,7 @@ public:
         void Stop()
         {
             isrunning = false;
+            Output_State = false;   
         }
 
         /**
@@ -80,6 +89,7 @@ public:
                 value = time;
                 Blink_State = false;
                 Tick_State = false;
+                Output_State = false;
                 return;
             }
 
@@ -87,7 +97,7 @@ public:
             value = oldMillis + time - millis();
 
             //Если таймер долщен тикнуть
-            if(value <= 0L)
+            if( _isTimer(time))
             {
                 //Взводим флаг, что таймер тикает
                 Tick_State = true;
@@ -97,6 +107,9 @@ public:
 
                 //Запоминаем время в которое он сработал
                 oldMillis = millis();
+
+                //Выход
+                Output_State = true;   
                 
                 //Выходим из функции
                 return;
@@ -104,6 +117,21 @@ public:
 
             //Сбрасываем флаг, что таймер тикает
             Tick_State = false;
+        }
+
+        //Метод для определения события тика
+        bool _isTimer(unsigned long period)
+        {
+            currentTime = millis();
+
+            if (currentTime >= oldMillis) 
+            {   
+                return (currentTime >= (oldMillis + period));
+            } 
+            else  
+            {   
+                return(currentTime >=(4294967295 - oldMillis + period));
+            }
         }
 
         //Проверяет, тикнул ли таймер
@@ -118,6 +146,11 @@ public:
             return Blink_State;
         }
 
+        bool GetOutputState()
+        {
+            return Output_State;
+        }
+
         long GetTime()
         {
             return value;
@@ -127,6 +160,7 @@ public:
         void Reset()
         {
             oldMillis = millis();
+            Output_State = false;   
         }
 };
 

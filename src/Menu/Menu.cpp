@@ -8,15 +8,16 @@
  * @param pinDown	Пин, к которму подключена кнопка вниз
  * @param pinSelect	Пин, к которму подключена кнопка выбора
  */
- Menu::Menu(uint8_t LCD_ADDR, int pinUp, int pinDown, int pinSelect)
+ Menu::Menu(uint8_t LCD_ADDR)
 {
     //Инициализируем дисплей
-    LCD = new LCD_Display(LCD_ADDR, 16,2);
+    LCD = new LiquidCrystal_I2C(LCD_ADDR, 16, 2);
+}
 
-    //Инициализируем кнопки для навигации по меню
-    BtnUp =     new  Button(pinUp);
-    BtnDown =   new  Button(pinDown);
-    BtnSelect = new  Button(pinSelect);
+Menu::Menu(LiquidCrystal_I2C* lcd)
+{
+   //Инициализируем дисплей
+   LCD = lcd;
 }
 
 /**
@@ -25,33 +26,11 @@
  */
 void Menu::Begin()
 {
-    //Символ карандаша
-    byte Edit[8] = {0b00011, 0b00000, 0b00110, 0b00110, 0b01100, 0b01100, 0b11000, 0b00000};
-
-    //Буква Я
-     byte YA[8] = {B01111,B10001,B10001,B01111,B00101,B01001,B10001,B00000,}; // Буква "Я"
-
-
-    //Буква Л
-     byte L[8] = {B00011,B00111,B00101,B00101,B01101,B01001,B11001,B00000,}; // Буква "Л"
-
-
-    //Буква Ы
-     byte A[8] = {B10001,B10001,B10001,B11001,B10101,B10101,B11001,B00000,}; // Буква "Ы"
-
-     byte I[8]   = {B10001,B10011,B10011,B10101,B11001,B11001,B10001,B00000,}; // Буква "И"
-
-   
     //Инициализируем дисплей
     LCD->init();
-    LCD->backlight();
 
-    //Загружаем символ в lcd
-    LCD->createChar(0, Edit);
-    LCD->createChar(1, YA);
-    LCD->createChar(2, L);
-    LCD->createChar(3, A);
-    LCD->createChar(4, I);
+    //Инициализируем дисплей
+    LCD->backlight();
 
     //Запускаем вспомогательный таймер, который
     //впоследствии передаем в каждый Item для анимации
@@ -61,17 +40,38 @@ void Menu::Begin()
     Timer.Start();
 }
 
+void Menu::createSymbol(int pos, byte symbol [])
+{
+    LCD->createChar(pos, symbol);
+}
+
+//Привязка часов реального времени к меню
+void Menu::BindingRTC(RTC_DS3231* rtc)
+{
+    RTC = rtc;
+}
+
 /**
  * Метод для добавления нового экрана
  */
-void Menu::AddScreen(BaseItem *screen)
+void Menu::AddScreen(ContentItem *screen)
 {
-    //Если превышено максимальное количество 
+    //Если превышено максимальное количество
     //пунктов меню, тогда пропускаем дальнейшие шаги
     if(ScreenCount == MAX_SCEEN)
     {
         return;
     }
+
+    //Передаем указатель на таймер
+    //для эффектов
+    screen->Timer_2Hz = &Timer_2Hz;
+
+    //Экземпляр дисплея
+    screen->BindingLCD(LCD);
+
+    //Присваиваем индикатор строки в дисплее
+    screen->Row = ScreenCount;
 
     //Добавляем указатель на экран
     Array[ScreenCount] = screen;
@@ -80,6 +80,9 @@ void Menu::AddScreen(BaseItem *screen)
     ScreenCount++;
 }
 
+/*
+    Метод для отмены сна (сброса таймера сна)
+*/
 void Menu::SleepCancel()
 {
         //Сбрасываем таймер, который отслеживает
@@ -90,237 +93,146 @@ void Menu::SleepCancel()
         LCD->backlight();
 }
 
-/**
- * Метод для навигации по меню в режиме просмотра
- */
-void Menu::NavigationOfReadMode()
+//Метод, который генерируется когда
+//нажимается кнопка вверх
+void Menu::UpCMD()
 {
-    //Eсли нажата кнопка вверх в режиме просмотра
-    //переходим к следующему параметру
-    if(BtnUp->FrontPositive() == true)
+    //Сбрасываем таймер сна
+    SleepCancel();
+
+    //Если экран находится в режиме просмотра
+    //содержимого передаем команду
+    //активному экрану
+    if(Array[ActiveScreen]->ContentView == true)
     {
-        
-        //Отменяем режим сна
-        SleepCancel();
+        Array[ActiveScreen]->BtnUpPressed();
+        return;
+    }
 
-        //Очищаем экран
-        LCD->clear();
+    //Очищаем дисплей
+    LCD->clear();
 
-        //Изменяем активный экран
+
+    if(ActiveScreen < ScreenCount - 1)
+    {
         ActiveScreen ++;
 
-        //Зацикливаем меню
-        if(ActiveScreen > ScreenCount - 1)
+        //Если индикатор текущей строки больше 3
+        //тогда каждому индикатору строки присваиваем - 1
+        if(Array[ActiveScreen]->Row > 1)
         {
-            ActiveScreen = 1;
+            for(int i = 0; i < ScreenCount; i ++)
+            {
+                Array[i]->Row --;
+            }
         }
+    }
 
-        //Выходим из функции
+}
+
+//Метод, который генерируется когда
+//нажимается кнопка вниз
+void Menu::DownCMD()
+{
+    //Сбрасываем таймер сна
+    SleepCancel();
+
+    //Если экран находится в режиме просмотра
+    //содержимого передаем команду приемущественно
+    if(Array[ActiveScreen]->ContentView == true)
+    {
+        Array[ActiveScreen]->BtnDownPressed();
         return;
     }
 
-    //Eсли нажата кнопка вниз в режиме просмотра
-    //переходим к предыдущему параметру
-    if(BtnDown->FrontPositive() == true)
+    //Иначе переключаем выбраный объект
+    if(ActiveScreen > 0)
     {
-        //Отменяем режим сна
-        SleepCancel();
-
-         //Очищаем экран
-        LCD->clear();
-
-         //Изменяем активный экран
         ActiveScreen --;
-
-        //Зацикливаем меню
-        if(ActiveScreen < 1 )
-        {
-            ActiveScreen = ScreenCount - 1;
-        }
-        
-        //Выходим из функции
-        return;
     }
 
-    //Eсли нажата кнопка выбора в режиме просмотра
-    //переходим в режим редактирования значений
-    if(BtnSelect->FrontPositive() == true)
+    //Очищаем дисплей
+    LCD->clear();
+
+    //Если индикатор текущей строки больше 3
+    //тогда каждому индикатору строки присваиваем + 1
+    if(Array[ActiveScreen]->Row < 0)
     {
-        //Отменяем режим сна
-        SleepCancel();
-
-        //Если в качестве текущего экрана
-        //запущен стартовый экран, тогда выходим
-        //из функции
-        if(ActiveScreen == 0)
+        for(int i = 0; i < ScreenCount; i ++)
         {
-            return;
+            Array[i]->Row ++;
         }
-
-        //Изменяем режим на режим записи
-        Mode = WriteMode;
-
-        //Выходим из функции
-        return;
     }
 }
 
-/*
- * Метод для навигации по меню в режиме редактора
- * параметров
- */
-void Menu::NavigationOfWriteMode()
+//Метод, который генерируется когда
+//нажимается кнопка выбора
+void Menu::SelectCMD()
 {
-    //Eсли нажата кнопка вверх в режиме просмотра
-        if(BtnUp->FrontPositive() == true)
-        {
-            //Отменяем режим сна
-            SleepCancel();
+    //Сбрасываем таймер сна
+    SleepCancel();
 
-           //Увеличиваем значение
-            Array[ActiveScreen]->UpValue();
-
-            //Сброс таймера, отслеживающего 
-            //бездействие
-            Timer.Reset();
-
-            //Выходим из функции
-            return;
-        }
-
-        //Если кнопка вверх удерживается
-        //тогда по хитроумной формуле изменяем 
-        //значение нашей переменной
-        if(BtnUp->IsPressed() == false)
-        {
-            int additive = BtnUp->GetAdditive();
-            Array[ActiveScreen]->AddValue(additive);
-            return;
-        }
-        
-
-        //Eсли нажата кнопка вверх в режиме редактора
-        //тогда добавляем единицу
-        if(BtnDown->FrontPositive() == true)
-        {
-            //Отменяем режим сна
-            SleepCancel();
-
-            Array[ActiveScreen]->DownValue();
-            return;
-        }
-
-        //Если кнопка нажата, пытаемся имзменить
-        //значение, по хитрой формуле
-        if(BtnDown->IsPressed() == false)
-        {
-            int additive = BtnDown->GetAdditive();
-            Array[ActiveScreen]->SubValue(additive);
-            return;
-        }
-
-        //Если в режиме редактора параметров нажата
-        //кнопка выбора, переключаем на режим просмотра
-        if(BtnSelect->FrontPositive() == true)
-        {
-            //Отменяем режим сна
-            SleepCancel();
-
-            Mode = ReadMode;
-            return;
-        }
-}
-
-/*
- * Метод для навигации по меню
- */
-void Menu::Navigation()
-{
-    //Навигация в зависимости от режима меню
-    switch (Mode)
+    //Передаем команду содержимому экрана
+    if(Array[ActiveScreen] != 0)
     {
-        case ReadMode:  NavigationOfReadMode();  break;
-        case WriteMode: NavigationOfWriteMode(); break;
+        Array[ActiveScreen]->BtnSelectPressed();
     }
+
 }
 
-/*
- * Метод для обновления состояния экрана
- * (должен вызываться каждый цикл в loop)
- */
 void Menu::Update()
 {
-    //Обновляем состояния таймера
-    Timer.Update();
+  //Если сработал таймер, тогда выключаем подсветку
+  Timer.Update();
 
-    //Включаем навигацию
-    Navigation();
+  if(Timer.IsTick() == true)
+  {
+      //Выключаем подсветку
+      LCD->noBacklight();
 
-    //Отображаем экран, который надо показать
-    Array[ActiveScreen]->Display(LCD, Mode, &Timer_2Hz);   
+      //Если текущий экран это стартровый экран,
+      //тогда выходим из функции
+      //if( ActiveScreen == 0)
+      //{
+          return;
+      //}
 
+      //Возвращаемся в режим редактирования
+      //Mode = ReadMode;
 
-    //Если сработал таймер, тогда возвращаемся на экран 0
-    if(Timer.IsTick())
+      //Очищаем дисплей
+      //LCD->clear();
+
+      //Устанавливаем в качестве начального
+      //экрана экран с индексом 0
+      //ActiveScreen = 0;
+  }
+    //Serial.println(ActiveScreen);
+
+    //Если находимся в режиме просмотра содежимого
+    if(Array[ActiveScreen]->ContentView == true)
     {
-        //Выключаем подсветку
-        LCD->noBacklight();
-
-        //Если текущий экран это стартровый экран,
-        //тогда выходим из функции
-        if( ActiveScreen == 0)
-        {
-            return;
-        }
-
-        //Возвращаемся в режим редактирования
-        Mode = ReadMode;
-
-        //Очищаем дисплей
-        LCD->clear();
-
-        //Устанавливаем в качестве начального 
-        //экрана экран с индексом 0
-        ActiveScreen = 0;
-
-        
-    }
-}
-
-void Menu::CreateBoolScreen(char* Header, bool* value)
-{
-    //Если превышено максимальное количество 
-    //пунктов меню, тогда пропускаем дальнейшие шаги
-    if(ScreenCount >= MAX_SCEEN)
-    {
+        Array[ActiveScreen]->DisplayContent();
         return;
     }
 
-    //Иначе создаем экран
-    BoolItem screen = BoolItem(Header,  value);
 
-    //Добавляем указатель на экран
-    Array[ScreenCount] = &screen;
 
-    //Инкрементируем счетчик экранов
-    ScreenCount++;
-}
-
-void Menu::CreateTimeScreen(char* Header, int* value)
-{
-    //Если превышено максимальное количество 
-    //пунктов меню, тогда пропускаем дальнейшие шаги
-    if(ScreenCount >= MAX_SCEEN)
+    //Проходим по всем пунктам
+    //и выводим только те,которые
+    //со строковым номером 0 и 1
+    for(int i = 0; i < ScreenCount; i ++)
     {
-        return;
+      if(Array[i]->Row == 0 || Array[i]->Row == 1)
+      {
+          Array[i]->Display();
+      }
     }
 
-    //Иначе создаем экран
-    TimeItem screen = TimeItem(Header,  value);
+    //Костыль для отображения стрелки
+    //LCD->setCursor(0, Array[ActiveScreen]->Row - 1);
+    //LCD->print(" ");
 
-    //Добавляем указатель на экран
-    Array[ScreenCount] = &screen;
-
-    //Инкрементируем счетчик экранов
-    ScreenCount++;
+    LCD->setCursor(0, Array[ActiveScreen]->Row);
+    LCD->print("\1");
 }

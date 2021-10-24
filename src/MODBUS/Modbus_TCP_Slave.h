@@ -1,8 +1,19 @@
 #ifndef MODBUS_TCP_H
 #define MODBUS_TCP_H
 
-//#include <ESP8266WiFi.h>
+#if defined(ESP8266)
+#include <ESP8266WiFi.h>
+#include <ESP8266mDNS.h>
+#else
 #include <WiFi.h>
+#include <ESPmDNS.h>
+
+#endif
+
+#include <WiFiUdp.h>
+#include <ArduinoOTA.h>
+#include"Timers/Timer_SD.h"
+#include <LiquidCrystal_I2C.h>
 
 //Максимальное количество HOLDING регистров
 #define MAX_HOLDING_REGISTERS 37
@@ -34,9 +45,9 @@
 #define MB_TCP_FUNC 7
 
 //ID устройства
-#define MB_DEVICE_ID 0
+#define MB_DEVICE_ID 1
 
-//Функция MODBUS 
+//Функция MODBUS
 #define MB_FUNCTION ByteArray[ MB_TCP_FUNC ]
 
 //Modbus TCP Slave
@@ -45,15 +56,27 @@ class MODBUS_TCP_SLAVE
 
   public:
 
+    //IP в строковом представлении
+    String STR_IP = "";
+
+    //Флаг, разрешающий работу WiFi
+    bool WiFi_State;
+
+    //Бит, что клиент подключен
+    bool ClientConnected = false;
+
+    //WiFi в режиме AP
+    bool AP_MODE = false;
+
     //Инициализация точки доступа
     void WIFI_AP_INIT();
 
-    //Инициализация настроек для подключения к 
+    //Инициализация настроек для подключения к
     //существующей сети WiFi
     void WIFI_STA_INIT();
 
-    //Буфер целочисленных значений (HOLDING регистров)
-    uint16_t MB_HOLDING_REGISTERS[MAX_HOLDING_REGISTERS];
+    //Получение IP
+    void GetIP();
 
     //Конструктор класса
     MODBUS_TCP_SLAVE();
@@ -61,18 +84,19 @@ class MODBUS_TCP_SLAVE
     //Обновление данных. Метод вызывается в loop
     //Метод для чтения данных из TCP порта
     void MODBUS_UPDATE();
-    
-    //Флаг, разрешающий работу WiFi
-    bool WiFi_State;
-      
-  
+
+    //Буфер целочисленных значений (HOLDING регистров)
+    uint16_t MB_HOLDING_REGISTERS[MAX_HOLDING_REGISTERS];
+
    private:
 
         //IP адрес
-        IPAddress ip = IPAddress(192,168,4,1); 
+        //IPAddress ip = IPAddress(192,168,4,1);
+
+        IPAddress ip = IPAddress(192, 168, 100, 100);
 
         //Шлюз
-        IPAddress gateway  = IPAddress(192, 168, 4, 1);
+        IPAddress gateway  = IPAddress(192, 168, 100, 1);
 
         //Маска сети
         IPAddress subnet  = IPAddress(255, 255, 255, 0);
@@ -81,14 +105,31 @@ class MODBUS_TCP_SLAVE
         uint8_t MAC[6] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
 
         //Флаг, помнящий предыдущее состояние флага, разрешающего работу WiFi
-        bool WiFi_Old_State;
+        bool WiFi_Old_State = false;
+
+        bool AP_MODE_Old_State = true;
 
         //Буфер байтов
         byte ByteArray[128];
 
         //Клиент и сервер
         WiFiServer MBServer = WiFiServer(MODBUS_TCP_PORT);
+
+        //Клиент
         WiFiClient client;
+
+        //Таймер для чтения регистров
+        Timer_SD timer_Update = Timer_SD(10);
+
+        //Таймер для проверкри клиента
+        Timer_SD timer_CheckClient = Timer_SD(2000);
+
+        //Последнее время сессии
+        unsigned long LastTime = 0;
+
+        //Переменная для временного
+        //хранения результата
+        unsigned long currentTime = 0;
 
         //Функция для управления WiFi
         void WiFi_CONTROL();
@@ -110,6 +151,10 @@ class MODBUS_TCP_SLAVE
 
         //Метод для обработки пакета принятых данных
         void MB_NEW_DATA_PROCESSING();
+
+         //Программный таймер
+         bool _isTimer(unsigned long period);
+
 };
 
 #endif
